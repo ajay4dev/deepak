@@ -155,11 +155,11 @@ exports.submitResume = async (req, res) => {
     const { email, name, mobile_number, service_location, query } = req.body;
     const resume = req.file;
 
-    // if (!resume) {
-    //   return res
-    //     .status(400)
-    //     .send({ error: "Resume file is required and must be a PDF." });
-    // }
+    if (!resume) {
+      return res
+        .status(400)
+        .send({ error: "Resume file is required and must be a PDF." });
+    }
 
     // Set up nodemailer transporter
     const transporter = nodemailer.createTransport({
@@ -173,7 +173,7 @@ exports.submitResume = async (req, res) => {
     // Set up email options for company with attachment
     const companyMailOptions = {
       from: email,
-      to: process.env.COMPANY_EMAIL,
+      to: process.env.EMAIL_USER,
       subject: `New Job Inquiry Submission from ${name}`,
       text: `A new job inquiry has been submitted with the following details:\n\n
       Name: ${name}\n
@@ -181,18 +181,18 @@ exports.submitResume = async (req, res) => {
       Mobile Number: ${mobile_number}\n
       Service Location: ${service_location}\n
       Query: ${query}`,
-    //   attachments: [
-    //     {
-    //       filename: resume.originalname,
-    //       content: resume.buffer,
-    //     },
-    //   ],
+      attachments: [
+        {
+          filename: resume.originalname,
+          content: resume.buffer,
+        },
+      ],
     };
 
     // Send information email to the company
     await transporter.sendMail(companyMailOptions);
     console.log(
-      `Information email sent to company: ${process.env.COMPANY_EMAIL}`
+      `Information email sent to company Email id`
     );
 
     // Send response
