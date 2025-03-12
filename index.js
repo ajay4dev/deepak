@@ -4,8 +4,7 @@ const cors = require("cors");
 const connectDB = require("./db");
 const authRoutes = require("./routes/authRoutes");
 const jobRoutes = require("./routes/jobRoutes");
-const multer = require('multer');
-const nodemailer = require('nodemailer');
+const nodemailer = require("nodemailer");
 
 dotenv.config();
 connectDB();
@@ -27,59 +26,6 @@ app.get("/", (req, res) => {
   res.json({
     message: "Api is working",
   });
-});
-
-// Configure multer for memory storage
-const upload = multer({
-  storage: multer.memoryStorage(),
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === "application/pdf") {
-      cb(null, true);
-    } else {
-      cb(new Error("Only PDF files are allowed!"));
-    }
-  },
-});
-
-app.post("/send-pdf", upload.single("pdf"), async (req, res) => {
-  try {
-    const { email, subject, message } = req.body;
-    const pdfFile = req.file;
-
-    if (!pdfFile) {
-      return res.status(400).json({ error: "PDF file is required." });
-    }
-
-    // Configure nodemailer
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    // Email options
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: subject || "PDF File",
-      text: message || "Please find the attached PDF file.",
-      attachments: [
-        {
-          filename: pdfFile.originalname,
-          content: pdfFile.buffer,
-        },
-      ],
-    };
-
-    // Send email
-    await transporter.sendMail(mailOptions);
-    res.status(200).json({ message: "PDF sent via email successfully!" });
-  } catch (error) {
-    console.error("Error sending email:", error);
-    res.status(500).json({ error: "Failed to send email." });
-  }
 });
 
 const PORT = process.env.PORT || 3000;
