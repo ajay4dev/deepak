@@ -41,7 +41,7 @@ exports.createJob = async (req, res) => {
 //  Fetch All Jobs
 exports.getAllJobs = async (req, res) => {
   try {
-    const jobs = await createJobModel.find();
+    const jobs = await createJobModel.find().sort({ createdAt: -1 });
     console.log(jobs);
     res.status(200).json({ success: true, data: jobs });
   } catch (error) {
