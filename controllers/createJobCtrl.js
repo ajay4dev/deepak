@@ -53,6 +53,57 @@ exports.getAllJobs = async (req, res) => {
   }
 };
 
+exports.updateJob = async (req, res) => {
+    const { id } = req.params;
+    const {
+      job_title,
+      location,
+      min_experience,
+      max_experience,
+      min_salary,
+      max_salary,
+      description,
+    } = req.body;
+  
+    try {
+      // Find the job by ID and update it
+      const updatedJob = await createJobModel.findByIdAndUpdate(
+        id,
+        {
+          job_title,
+          location,
+          min_experience,
+          max_experience,
+          min_salary,
+          max_salary,
+          description,
+        },
+        { new: true, runValidators: true } // Return the updated document
+      );
+  
+      // If job not found
+      if (!updatedJob) {
+        return res.status(404).json({
+          success: false,
+          message: "Job not found.",
+        });
+      }
+  
+      res.status(200).json({
+        success: true,
+        message: "Job updated successfully.",
+        data: updatedJob,
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: "Failed to update job.",
+        error: error.message,
+      });
+    }
+  };
+  
+
 exports.submitResume = async (req, res) => {
   try {
     const { email, name, mobile_number, service_location, query } = req.body;
@@ -81,11 +132,11 @@ exports.submitResume = async (req, res) => {
       replyTo: email,
       subject: `New Job Inquiry Submission from ${name}`,
       text: `A new job inquiry has been submitted with the following details:\n\n
-          Name: ${name}\n
-          Email: ${email}\n
-          Mobile Number: ${mobile_number}\n
-          Service Location: ${service_location}\n
-          Query: ${query}`,
+            Name: ${name}\n
+            Email: ${email}\n
+            Mobile Number: ${mobile_number}\n
+            Service Location: ${service_location}\n
+            Query: ${query}`,
       attachments: [
         {
           filename: resume.originalname,
@@ -94,14 +145,32 @@ exports.submitResume = async (req, res) => {
       ],
     };
 
-    // Send information email to the company
+    // Set up email options for user confirmation
+    const userMailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: `Thank You for Your Job Inquiry, ${name}!`,
+      text: `Dear ${name},\n\nThank you for reaching out to us with your job inquiry.\n\nHere are the details we received:\n
+            Name: ${name}\n
+            Email: ${email}\n
+            Mobile Number: ${mobile_number}\n
+            Service Location: ${service_location}\n
+            Query: ${query}\n\n
+            We will review your submission and get back to you shortly.\n\nBest Regards,\nTeam`,
+    };
+
+    // Send email to company
     await transporter.sendMail(companyMailOptions);
-    console.log(`Information email sent to company Email id`);
+    // console.log(`Information email sent to company.`);
+
+    // Send confirmation email to the user
+    await transporter.sendMail(userMailOptions);
+    // console.log(`Confirmation email sent to user.`);
 
     // Send response
-    res
-      .status(200)
-      .send({ message: "Job inquiry submitted successfully with resume." });
+    res.status(200).send({
+      message: "Job inquiry submitted successfully with resume.",
+    });
   } catch (error) {
     console.error("Error occurred:", error);
     res.status(500).send({
