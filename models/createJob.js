@@ -37,10 +37,18 @@ const jobSchema = new mongoose.Schema(
       required: true,
       // default: "This is a job description for the role of Software Engineer."
     },
-    posted_at: {
-      type: Date,
-      default: Date.now,
+    start_time: {
+      type: String, // Use String to store time in formats like "09:00 AM"
+      required: true,
     },
+    end_time: {
+      type: String, // Use String to store time in formats like "05:00 PM"
+      required: true,
+    },
+    // posted_at: {
+    //   type: Date,
+    //   default: Date.now,
+    // },
   },
   { timestamps: true }
 );

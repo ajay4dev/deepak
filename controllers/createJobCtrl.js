@@ -11,6 +11,8 @@ exports.createJob = async (req, res) => {
     min_salary,
     max_salary,
     description,
+    start_time,
+    end_time,
   } = req.body;
 
   try {
@@ -22,6 +24,8 @@ exports.createJob = async (req, res) => {
       min_salary,
       max_salary,
       description,
+      start_time,
+      end_time,
     });
     await job.save();
     res.status(201).json({
@@ -42,7 +46,7 @@ exports.createJob = async (req, res) => {
 exports.getAllJobs = async (req, res) => {
   try {
     const jobs = await createJobModel.find().sort({ createdAt: -1 });
-    console.log(jobs);
+    // console.log(jobs);
     res.status(200).json({ success: true, data: jobs });
   } catch (error) {
     res.status(500).json({
@@ -54,35 +58,66 @@ exports.getAllJobs = async (req, res) => {
 };
 
 exports.updateJob = async (req, res) => {
+  const { id } = req.params;
+  const {
+    job_title,
+    location,
+    min_experience,
+    max_experience,
+    min_salary,
+    max_salary,
+    description,
+    start_time,
+    end_time,
+  } = req.body;
+
+  try {
+    // Find the job by ID and update it
+    const updatedJob = await createJobModel.findByIdAndUpdate(
+      id,
+      {
+        job_title,
+        location,
+        min_experience,
+        max_experience,
+        min_salary,
+        max_salary,
+        description,
+        start_time,
+        end_time,
+      },
+      { new: true, runValidators: true } // Return the updated document
+    );
+
+    // If job not found
+    if (!updatedJob) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Job updated successfully.",
+      data: updatedJob,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: "Failed to update job.",
+      error: error.message,
+    });
+  }
+};
+
+exports.deleteJob = async (req, res) => {
     const { id } = req.params;
-    const {
-      job_title,
-      location,
-      min_experience,
-      max_experience,
-      min_salary,
-      max_salary,
-      description,
-    } = req.body;
   
     try {
-      // Find the job by ID and update it
-      const updatedJob = await createJobModel.findByIdAndUpdate(
-        id,
-        {
-          job_title,
-          location,
-          min_experience,
-          max_experience,
-          min_salary,
-          max_salary,
-          description,
-        },
-        { new: true, runValidators: true } // Return the updated document
-      );
+      const job = await createJobModel.findByIdAndDelete(id);
   
-      // If job not found
-      if (!updatedJob) {
+      if (!job) {
         return res.status(404).json({
           success: false,
           message: "Job not found.",
@@ -91,13 +126,12 @@ exports.updateJob = async (req, res) => {
   
       res.status(200).json({
         success: true,
-        message: "Job updated successfully.",
-        data: updatedJob,
+        message: "Job deleted successfully.",
       });
     } catch (error) {
       res.status(400).json({
         success: false,
-        message: "Failed to update job.",
+        message: "Failed to delete job.",
         error: error.message,
       });
     }

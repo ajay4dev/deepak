@@ -11,15 +11,19 @@ const {
   getAllJobs,
   submitResume,
   updateJob,
+  deleteJob,
 } = require("../controllers/createJobCtrl");
 
-// 🟢 POST: Create a New Job (Protected Route)
+//  POST: Create a New Job (Protected Route)
 router.post("/create", createJob);
 
-// 🔵 GET: Fetch All Jobs
+//  GET: Fetch All Jobs
 router.get("/all", getAllJobs);
 
 router.put("/updateJob/:id", updateJob);
+
+// DELETE API
+router.delete("/deleteJob/:id", deleteJob);
 
 
 // Configure multer for memory storage
@@ -33,7 +37,8 @@ const upload = multer({
       }
     },
   });
-  
+
 router.post("/submit-resume", upload.single("resume"), submitResume);
+
 
 module.exports = router;
