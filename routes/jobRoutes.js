@@ -12,6 +12,7 @@ const {
   submitResume,
   updateJob,
   deleteJob,
+  getJobById,
 } = require("../controllers/createJobCtrl");
 
 //  POST: Create a New Job (Protected Route)
@@ -19,6 +20,8 @@ router.post("/create", createJob);
 
 //  GET: Fetch All Jobs
 router.get("/all", getAllJobs);
+
+router.get("/single/:id", getJobById);
 
 router.put("/updateJob/:id", updateJob);
 

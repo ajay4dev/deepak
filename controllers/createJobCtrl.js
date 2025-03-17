@@ -57,6 +57,33 @@ exports.getAllJobs = async (req, res) => {
   }
 };
 
+exports.getJobById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const job = await createJobModel.findById(id);
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Job fetched successfully.",
+      data: job,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: "Failed to fetch job.",
+      error: error.message,
+    });
+  }
+};
+
 exports.updateJob = async (req, res) => {
   const { id } = req.params;
   const {
@@ -112,31 +139,30 @@ exports.updateJob = async (req, res) => {
 };
 
 exports.deleteJob = async (req, res) => {
-    const { id } = req.params;
-  
-    try {
-      const job = await createJobModel.findByIdAndDelete(id);
-  
-      if (!job) {
-        return res.status(404).json({
-          success: false,
-          message: "Job not found.",
-        });
-      }
-  
-      res.status(200).json({
-        success: true,
-        message: "Job deleted successfully.",
-      });
-    } catch (error) {
-      res.status(400).json({
+  const { id } = req.params;
+
+  try {
+    const job = await createJobModel.findByIdAndDelete(id);
+
+    if (!job) {
+      return res.status(404).json({
         success: false,
-        message: "Failed to delete job.",
-        error: error.message,
+        message: "Job not found.",
       });
     }
-  };
-  
+
+    res.status(200).json({
+      success: true,
+      message: "Job deleted successfully.",
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: "Failed to delete job.",
+      error: error.message,
+    });
+  }
+};
 
 exports.submitResume = async (req, res) => {
   try {
