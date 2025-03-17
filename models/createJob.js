@@ -45,6 +45,10 @@ const jobSchema = new mongoose.Schema(
       type: String, // Use String to store time in formats like "05:00 PM"
       required: true,
     },
+    total_openings: {
+        type: Number,
+        // required: true,
+      },
     // posted_at: {
     //   type: Date,
     //   default: Date.now,
