@@ -14,6 +14,7 @@ const {
   deleteJob,
   getJobById,
 } = require("../controllers/createJobCtrl");
+const verifyAdmin = require("../middleware/verifyAdmin");
 
 //  POST: Create a New Job (Protected Route)
 router.post("/create", createJob);
@@ -21,27 +22,25 @@ router.post("/create", createJob);
 //  GET: Fetch All Jobs
 router.get("/all", getAllJobs);
 
-router.get("/single/:id", getJobById);
+router.get("/single/:id", verifyAdmin, getJobById);
 
-router.put("/updateJob/:id", updateJob);
+router.put("/updateJob/:id", verifyAdmin, updateJob);
 
 // DELETE API
-router.delete("/deleteJob/:id", deleteJob);
-
+router.delete("/deleteJob/:id", verifyAdmin, deleteJob);
 
 // Configure multer for memory storage
 const upload = multer({
-    storage: multer.memoryStorage(),
-    fileFilter: (req, file, cb) => {
-      if (file.mimetype === "application/pdf") {
-        cb(null, true);
-      } else {
-        cb(new Error("Only PDF files are allowed!"));
-      }
-    },
-  });
+  storage: multer.memoryStorage(),
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === "application/pdf") {
+      cb(null, true);
+    } else {
+      cb(new Error("Only PDF files are allowed!"));
+    }
+  },
+});
 
 router.post("/submit-resume", upload.single("resume"), submitResume);
-
 
 module.exports = router;

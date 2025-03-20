@@ -24,12 +24,12 @@ const jobSchema = new mongoose.Schema(
     },
     min_salary: {
       type: Number,
-    //   required: true,
+      //   required: true,
       // default: 30000
     },
     max_salary: {
       type: Number,
-    //   required: true,
+      //   required: true,
       // default: 100000
     },
     description: {
@@ -46,10 +46,10 @@ const jobSchema = new mongoose.Schema(
       required: true,
     },
     number_of_openings: {
-        type: Number,
-        // required: true,
-        // min: 1, // Ensure there's at least one opening
-      },
+      type: Number,
+      // required: true,
+      // min: 1, // Ensure there's at least one opening
+    },
     // posted_at: {
     //   type: Date,
     //   default: Date.now,

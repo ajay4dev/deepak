@@ -13,6 +13,7 @@ exports.createJob = async (req, res) => {
     description,
     start_time,
     end_time,
+    number_of_openings,
   } = req.body;
 
   try {
@@ -26,6 +27,7 @@ exports.createJob = async (req, res) => {
       description,
       start_time,
       end_time,
+      number_of_openings,
     });
     await job.save();
     res.status(201).json({
@@ -96,6 +98,7 @@ exports.updateJob = async (req, res) => {
     description,
     start_time,
     end_time,
+    number_of_openings,
   } = req.body;
 
   try {
@@ -112,6 +115,7 @@ exports.updateJob = async (req, res) => {
         description,
         start_time,
         end_time,
+        number_of_openings,
       },
       { new: true, runValidators: true } // Return the updated document
     );
