@@ -1,5 +1,6 @@
 const createJobModel = require("../models/createJob");
 const nodemailer = require("nodemailer");
+const ResumeApplication = require("../models/submitResumeModel");
 
 //  Create a New Job
 exports.createJob = async (req, res) => {
@@ -170,17 +171,34 @@ exports.deleteJob = async (req, res) => {
 
 exports.submitResume = async (req, res) => {
   try {
-    const { email, name, mobile_number, service_location, query } = req.body;
+    const {
+      email,
+      name,
+      mobile_number,
+      service_location,
+      query,
+      // job_title
+    } = req.body;
     const resume = req.file;
 
-    // Check if resume file is provided and is a PDF
+    // Check for resume file
     if (!resume || resume.mimetype !== "application/pdf") {
       return res
         .status(400)
         .send({ error: "Resume file is required and must be a PDF." });
     }
 
-    // Set up nodemailer transporter
+    // Save to MongoDB
+    await ResumeApplication.create({
+      email,
+      name,
+      mobile_number,
+      service_location,
+      query,
+      // job_title,
+    });
+
+    // Nodemailer transporter
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -189,18 +207,14 @@ exports.submitResume = async (req, res) => {
       },
     });
 
-    // Set up email options for company with attachment
+    // Company email
     const companyMailOptions = {
       from: email,
       to: process.env.EMAIL_USER,
       replyTo: email,
       subject: `New Job Inquiry Submission from ${name}`,
       text: `A new job inquiry has been submitted with the following details:\n\n
-            Name: ${name}\n
-            Email: ${email}\n
-            Mobile Number: ${mobile_number}\n
-            Service Location: ${service_location}\n
-            Query: ${query}`,
+Name: ${name}\nEmail: ${email}\nMobile Number: ${mobile_number}\nService Location: ${service_location}\nQuery: ${query}`,
       attachments: [
         {
           filename: resume.originalname,
@@ -209,38 +223,60 @@ exports.submitResume = async (req, res) => {
       ],
     };
 
-    // Set up email options for user confirmation
+    // Confirmation email to applicant
     const userMailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
       subject: `Thank You for Your Job Inquiry, ${name}!`,
       text: `Dear ${name},\n\nThank you for reaching out to us with your job inquiry.\n\nHere are the details we received:\n
-            Name: ${name}\n
-            Email: ${email}\n
-            Mobile Number: ${mobile_number}\n
-            Service Location: ${service_location}\n
-            Query: ${query}\n\n
-            We will review your submission and get back to you shortly.\n\nBest Regards,\nTeam`,
+Name: ${name}\nEmail: ${email}\nMobile Number: ${mobile_number}\nService Location: ${service_location}\nQuery: ${query}\n\n
+We will review your submission and get back to you shortly.\n\nBest Regards,\nTeam`,
     };
 
-    // Send email to company
+    // Send emails
     await transporter.sendMail(companyMailOptions);
-    // console.log(`Information email sent to company.`);
-
-    // Send confirmation email to the user
     await transporter.sendMail(userMailOptions);
-    // console.log(`Confirmation email sent to user.`);
 
-    // Send response
-    res.status(200).send({
-      message: "Job inquiry submitted successfully with resume.",
-    });
+    res
+      .status(200)
+      .send({ message: "Job inquiry submitted successfully with resume." });
   } catch (error) {
     console.error("Error occurred:", error);
     res.status(500).send({
       error:
         "An error occurred while submitting the inquiry. Please try again later.",
       details: error.message,
+    });
+  }
+};
+
+exports.getApplicationsCountByJob = async (req, res) => {
+  try {
+    const result = await ResumeApplication.aggregate([
+      {
+        $group: {
+          _id: "$query",
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          job_title: "$_id",
+          count: 1,
+          _id: 0,
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      message: "Applications count by job title",
+      data: result,
+    });
+  } catch (error) {
+    console.error("Error fetching job stats:", error);
+    res.status(500).json({
+      message: "Failed to fetch applications data",
+      error: error.message,
     });
   }
 };

@@ -13,6 +13,7 @@ const {
   updateJob,
   deleteJob,
   getJobById,
+  getApplicationsCountByJob,
 } = require("../controllers/createJobCtrl");
 const verifyAdmin = require("../middleware/verifyAdmin");
 
@@ -42,5 +43,7 @@ const upload = multer({
 });
 
 router.post("/submit-resume", upload.single("resume"), submitResume);
+
+router.get("/resume-stats", getApplicationsCountByJob);
 
 module.exports = router;
