@@ -1,6 +1,8 @@
 const createJobModel = require("../models/createJob");
 const nodemailer = require("nodemailer");
 const ResumeApplication = require("../models/submitResumeModel");
+const mongoose = require("mongoose");
+
 
 //  Create a New Job
 exports.createJob = async (req, res) => {
@@ -267,25 +269,30 @@ exports.deleteJob = async (req, res) => {
 
 exports.submitResume = async (req, res) => {
   try {
-    const {
-      job_id,
-      email,
-      name,
-      mobile_number,
-      service_location,
-      query,
-      // job_title
-    } = req.body;
+    const { job_id, email, name, mobile_number, service_location, query } =
+      req.body;
+
+    // Ensure job_id is provided and valid
+    if (!mongoose.Types.ObjectId.isValid(job_id)) {
+      return res.status(400).json({ error: "Invalid job ID format" });
+    }
+
+    // Check if job exists
+    const job = await createJobModel.findById(job_id);
+    if (!job) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
     const resume = req.file;
 
-    // Check for resume file
+    // Validate resume file
     if (!resume || resume.mimetype !== "application/pdf") {
       return res
         .status(400)
         .send({ error: "Resume file is required and must be a PDF." });
     }
 
-    // Save to MongoDB
+    // Save application to DB
     await ResumeApplication.create({
       job_id,
       email,
@@ -293,10 +300,9 @@ exports.submitResume = async (req, res) => {
       mobile_number,
       service_location,
       query,
-      // job_title,
     });
 
-    // Nodemailer transporter
+    // Nodemailer setup
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -305,30 +311,27 @@ exports.submitResume = async (req, res) => {
       },
     });
 
-    // Company email
+    // Email to company
     const companyMailOptions = {
       from: email,
       to: process.env.EMAIL_USER,
       replyTo: email,
       subject: `New Job Inquiry Submission from ${name}`,
-      text: `A new job inquiry has been submitted with the following details:\n\n
-Name: ${name}\nEmail: ${email}\nMobile Number: ${mobile_number}\nService Location: ${service_location}\nQuery: ${query}`,
+      text: `A new job inquiry has been submitted with the following details:\n\nName: ${name}\nEmail: ${email}\nMobile Number: ${mobile_number}\nService Location: ${service_location}\nQuery: ${query}`,
       attachments: [
-        // {
-        //   filename: resume.originalname,
-        //   content: resume.buffer,
-        // },
+        {
+          filename: resume.originalname,
+          content: resume.buffer,
+        },
       ],
     };
 
-    // Confirmation email to applicant
+    // Confirmation email to user
     const userMailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
       subject: `Thank You for Your Job Inquiry, ${name}!`,
-      text: `Dear ${name},\n\nThank you for reaching out to us with your job inquiry.\n\nHere are the details we received:\n
-Name: ${name}\nEmail: ${email}\nMobile Number: ${mobile_number}\nService Location: ${service_location}\nQuery: ${query}\n\n
-We will review your submission and get back to you shortly.\n\nBest Regards,\nTeam`,
+      text: `Dear ${name},\n\nThank you for reaching out to us with your job inquiry.\n\nHere are the details we received:\nName: ${name}\nEmail: ${email}\nMobile Number: ${mobile_number}\nService Location: ${service_location}\nQuery: ${query}\n\nWe will review your submission and get back to you shortly.\n\nBest Regards,\nTeam`,
     };
 
     // Send emails
