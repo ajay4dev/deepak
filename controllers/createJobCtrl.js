@@ -45,12 +45,108 @@ exports.createJob = async (req, res) => {
   }
 };
 
+exports.getJobApplicationsWithDetails = async (req, res) => {
+  try {
+    const result = await createJobModel.aggregate([
+      {
+        $lookup: {
+          from: "resumeapplications", // DOUBLE CHECK THIS NAME
+          localField: "_id",
+          foreignField: "job_id",
+          as: "applicants",
+        },
+      },
+      {
+        $addFields: {
+          applicants_count: { $size: "$applicants" },
+        },
+      },
+      {
+        $project: {
+          job_title: 1,
+          location: 1,
+          number_of_openings: 1,
+          applicants_count: 1,
+          applicants: {
+            $map: {
+              input: "$applicants",
+              as: "applicant", // consistent spelling
+              in: {
+                name: "$$applicant.name",
+                email: "$$applicant.email",
+                mobile_number: "$$applicant.mobile_number",
+                service_location: "$$applicant.service_location",
+                submitted_at: "$$applicant.submitted_at", // check field name
+              },
+            },
+          },
+        },
+      },
+    ]);
+
+    console.log("Aggregation result:", result);
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    console.error("Aggregation error:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 //  Fetch All Jobs
 exports.getAllJobs = async (req, res) => {
   try {
-    const jobs = await createJobModel.find().sort({ createdAt: -1 });
-    // console.log(jobs);
-    res.status(200).json({ success: true, data: jobs });
+    const result = await createJobModel.aggregate([
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $lookup: {
+          from: "resumeapplications", // Verify this matches your collection name
+          localField: "_id",
+          foreignField: "job_id",
+          as: "applicants",
+        },
+      },
+      {
+        $addFields: {
+          applicants_count: { $size: "$applicants" },
+        },
+      },
+      {
+        $project: {
+          job_title: 1,
+          location: 1,
+          min_experience: 1,
+          max_experience: 1,
+          min_salary: 1,
+          max_salary: 1,
+          description: 1,
+          start_time: 1,
+          end_time: 1,
+          number_of_openings: 1,
+          createdAt: 1,
+          applicants_count: 1,
+          applicants: {
+            $map: {
+              input: "$applicants",
+              as: "applicant",
+              in: {
+                name: "$$applicant.name",
+                email: "$$applicant.email",
+                mobile_number: "$$applicant.mobile_number",
+                service_location: "$$applicant.service_location",
+                submitted_at: "$$applicant.submitted_at",
+              },
+            },
+          },
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -172,6 +268,7 @@ exports.deleteJob = async (req, res) => {
 exports.submitResume = async (req, res) => {
   try {
     const {
+      job_id,
       email,
       name,
       mobile_number,
@@ -182,14 +279,15 @@ exports.submitResume = async (req, res) => {
     const resume = req.file;
 
     // Check for resume file
-    if (!resume || resume.mimetype !== "application/pdf") {
-      return res
-        .status(400)
-        .send({ error: "Resume file is required and must be a PDF." });
-    }
+    // if (!resume || resume.mimetype !== "application/pdf") {
+    //   return res
+    //     .status(400)
+    //     .send({ error: "Resume file is required and must be a PDF." });
+    // }
 
     // Save to MongoDB
     await ResumeApplication.create({
+      job_id,
       email,
       name,
       mobile_number,
@@ -216,10 +314,10 @@ exports.submitResume = async (req, res) => {
       text: `A new job inquiry has been submitted with the following details:\n\n
 Name: ${name}\nEmail: ${email}\nMobile Number: ${mobile_number}\nService Location: ${service_location}\nQuery: ${query}`,
       attachments: [
-        {
-          filename: resume.originalname,
-          content: resume.buffer,
-        },
+        // {
+        //   filename: resume.originalname,
+        //   content: resume.buffer,
+        // },
       ],
     };
 

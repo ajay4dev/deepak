@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 
 const ResumeApplicationSchema = new mongoose.Schema(
   {
+    job_id: { type: mongoose.Schema.Types.ObjectId, ref: "Job" },
     email: String,
     name: String,
     mobile_number: Number,

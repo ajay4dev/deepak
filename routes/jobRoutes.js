@@ -14,11 +14,14 @@ const {
   deleteJob,
   getJobById,
   getApplicationsCountByJob,
+  getJobApplicationsWithDetails,
 } = require("../controllers/createJobCtrl");
 const verifyAdmin = require("../middleware/verifyAdmin");
 
 //  POST: Create a New Job (Protected Route)
 router.post("/create", createJob);
+
+router.get("/job-applications", getJobApplicationsWithDetails);
 
 //  GET: Fetch All Jobs
 router.get("/all", getAllJobs);
