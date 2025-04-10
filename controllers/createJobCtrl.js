@@ -3,7 +3,6 @@ const nodemailer = require("nodemailer");
 const ResumeApplication = require("../models/submitResumeModel");
 const mongoose = require("mongoose");
 
-
 //  Create a New Job
 exports.createJob = async (req, res) => {
   const {
@@ -18,6 +17,12 @@ exports.createJob = async (req, res) => {
     end_time,
     number_of_openings,
   } = req.body;
+
+  // Hide salary if needed
+  if (createJobModel.isSalaryHidden) {
+    delete createJobModel.min_salary;
+    delete createJobModel.max_salary;
+  }
 
   try {
     const job = new createJobModel({

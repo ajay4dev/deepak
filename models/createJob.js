@@ -32,6 +32,10 @@ const jobSchema = new mongoose.Schema(
       //   required: true,
       // default: 100000
     },
+    isSalaryHidden: {
+      type: Boolean,
+      default: false,
+    },
     description: {
       type: String,
       required: true,
