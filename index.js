@@ -5,12 +5,15 @@ const connectDB = require("./db");
 const authRoutes = require("./routes/authRoutes");
 const jobRoutes = require("./routes/jobRoutes");
 const nodemailer = require("nodemailer");
+const cookieParser = require("cookie-parser");
+
 
 dotenv.config();
 connectDB();
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 
 const corsOptions = {
   origin: "*",

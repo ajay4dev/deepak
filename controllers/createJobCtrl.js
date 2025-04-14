@@ -295,12 +295,19 @@ exports.submitResume = async (req, res) => {
 
     const resume = req.file;
 
-    // Validate resume file
-    if (!resume || resume.mimetype !== "application/pdf") {
+    // Check if resume is uploaded
+    if (!resume) {
       return res
         .status(400)
-        .send({ error: "Resume file is required and must be a PDF." });
+        .send({ error: "Resume file is required in valid format." });
     }
+
+    // Validate resume file
+    // if (!resume || resume.mimetype !== "application/pdf") {
+    //   return res
+    //     .status(400)
+    //     .send({ error: "Resume file is required and must be a PDF." });
+    // }
 
     // Save application to DB
     await ResumeApplication.create({

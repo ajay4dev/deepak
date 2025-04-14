@@ -34,13 +34,21 @@ router.put("/updateJob/:id", verifyAdmin, updateJob);
 router.delete("/deleteJob/:id", verifyAdmin, deleteJob);
 
 // Configure multer for memory storage
+const allowedMimeTypes = [
+  "application/pdf",
+  "application/msword", // .doc
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+  "image/jpeg", // .jpg, .jpeg
+  "image/png", // .png
+];
+
 const upload = multer({
   storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === "application/pdf") {
+    if (allowedMimeTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error("Only PDF files are allowed!"));
+      cb(new Error("Only PDF, DOC, DOCX, JPG, and PNG files are allowed!"));
     }
   },
 });

@@ -52,8 +52,14 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" } 
+      { expiresIn: "1h" }
     );
+    // Set cookie for 1 day
+    res.cookie("token", token, {
+      httpOnly: true,
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
 
     res.status(200).json({ message: "Login successful!", token });
   } catch (error) {
@@ -61,4 +67,9 @@ exports.login = async (req, res) => {
       .status(500)
       .json({ message: "Something went wrong", error: error.message });
   }
+};
+
+exports.logout = async (req, res) => {
+  res.clearCookie("token");
+  res.json({ message: "Logged out" });
 };

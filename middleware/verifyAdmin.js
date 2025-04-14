@@ -2,7 +2,8 @@ const jwt = require("jsonwebtoken");
 
 const verifyAdmin = (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
+    const token = req.cookies.token || req.headers.authorization?.split(" ")[1]; // 👈 Cookie se token le
+
     if (!token) {
       return res.status(403).json({
         success: false,
@@ -10,10 +11,7 @@ const verifyAdmin = (req, res, next) => {
       });
     }
 
-    // Decode token & check role
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    // console.log("Decoded Token:", decoded); //  Debugging ke liye
-
     req.user = decoded;
 
     if (decoded.role !== "admin") {
